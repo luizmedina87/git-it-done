@@ -3,6 +3,24 @@ var nameInputEl = document.querySelector("#username");
 var repoContainerEl = document.querySelector("#repos-container");
 var repoSearchTerm = document.querySelector("#repo-search-term");
 
+var formSubmitHandler = function(event) {
+  // prevent page from refreshing
+  event.preventDefault();
+
+  // get value from input element
+  var username = nameInputEl.value.trim();
+
+  if (username) {
+    getUserRepos(username);
+
+    // clear old content
+    repoContainerEl.textContent = "";
+    nameInputEl.value = "";
+  } else {
+    alert("Please enter a GitHub username");
+  }
+};
+
 var getUserRepos = function(user) {
   // format the github api url
   var apiUrl = "https://api.github.com/users/" + user + "/repos";
@@ -10,42 +28,29 @@ var getUserRepos = function(user) {
   // make a get request to url
   fetch(apiUrl)
     .then(function(response) {
+      // request was successful
       if (response.ok) {
+        console.log(response);
         response.json().then(function(data) {
+          console.log(data);
           displayRepos(data, user);
         });
-      } 
-      else {
-        alert("Error: GitHub User Not Found");
+      } else {
+        alert("Error: " + response.statusText);
       }
     })
     .catch(function(error) {
-      alert("Unable to connect to Github");
-    })
-};
-
-var formSubmitHandler = function(event) {
-  event.preventDefault();
-  // get value from input element
-  var username = nameInputEl.value.trim();
-
-  if (username) {
-    getUserRepos(username);
-    nameInputEl.value = "";
-  } else {
-    alert("Please enter a GitHub username");
-  }
+      alert("Unable to connect to GitHub");
+    });
 };
 
 var displayRepos = function(repos, searchTerm) {
-  
   // check if api returned any repos
   if (repos.length === 0) {
     repoContainerEl.textContent = "No repositories found.";
     return;
   }
-  
-  repoContainerEl.textContent = "";
+
   repoSearchTerm.textContent = searchTerm;
 
   // loop over repos
@@ -64,9 +69,6 @@ var displayRepos = function(repos, searchTerm) {
     // append to container
     repoEl.appendChild(titleEl);
 
-    // append container to the dom
-    repoContainerEl.appendChild(repoEl);
-
     // create a status element
     var statusEl = document.createElement("span");
     statusEl.classList = "flex-row align-center";
@@ -81,8 +83,11 @@ var displayRepos = function(repos, searchTerm) {
 
     // append to container
     repoEl.appendChild(statusEl);
+
+    // append container to the dom
+    repoContainerEl.appendChild(repoEl);
   }
 };
 
-getUserRepos("lernantino");
+// add event listeners to forms
 userFormEl.addEventListener("submit", formSubmitHandler);
